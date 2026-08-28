@@ -4,5 +4,5 @@ __pycache__/
 dbFiles/
 
 # Custom Files
-
+websocket.py
 chumma.py
