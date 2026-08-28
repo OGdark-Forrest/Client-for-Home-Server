@@ -1,0 +1,8 @@
+# Directories
+.venv/
+__pycache__/
+dbFiles/
+
+# Custom Files
+
+chumma.py

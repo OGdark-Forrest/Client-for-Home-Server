@@ -1,0 +1,10 @@
+{
+    "jsonService": "utils/jsonFiles/service/",
+    "jsonUtils": "utils/jsonFiles/utils/",
+    "jsonAuth": "utils/jsonFiles/auth/",
+    "db": "utils/dbFiles/",
+    "custom": "C:/Users/meerc/Desktop/CustomServices/",
+    "vbs": "C:/Users/meerc/Desktop/CustomServices/VBS/",
+    "logs": "utils/logs/",
+    "pyw": "C:/Users/meerc/Desktop/CustomServices/.venv/Scripts/pythonw.exe"
+}
