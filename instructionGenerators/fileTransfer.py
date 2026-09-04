@@ -107,7 +107,7 @@ class ChunkifierDirectory:
             if path.is_file() and not any(part in self.excluded for part in path.parts):
                 self.filePaths.append(path)
 
-    def startTransfer(self):
+    def startTransfer(self, nextcloud=False, handler:general.nextCloudHandler = None):
         rootDirectory = self.directoryPath.name
 
         for path in self.filePaths:
@@ -116,12 +116,62 @@ class ChunkifierDirectory:
             directory = Path(rootDirectory) / relativePath.parent
             fileName = relativePath.name
 
-            chunkifyObj = ChunkifierSingle(
-                path,
-                self.chunkSize,
-                str(directory),
-                fileName,
-                1,
-                general.pathInfo("db")+"jobQueue.db"
-            )
-            chunkifyObj.sendPackets()
+            if not nextcloud:
+                chunkifyObj = ChunkifierSingle(
+                    path,
+                    self.chunkSize,
+                    str(directory),
+                    fileName,
+                    1,
+                    general.pathInfo("db")+"jobQueue.db"
+                )
+                chunkifyObj.sendPackets()
+            else:
+                handler.action("WRITE", f"LaptopBackups/{str(directory)}", path)
+
+def tryConnect():
+    return general.nextCloudHandler()
+
+IMPORTANT_EXTENSIONS = {".py", ".json", ".txt", ".db", ".pdf", ".md", ".ppt", ".config",  ".env", ".c", ".cpp", ".java", ".csv", ".ico", ".png", ".jpeg", ".jpg"}
+excludedFolders = {".venv", "__pycache__"}
+chunkSize = 64 * 1024
+
+def getContents(path):
+    files = []
+    directories = []
+
+    for entry in os.scandir(path):
+        if entry.is_file():
+            files.append(entry)
+        elif entry.is_dir():
+            directories.append(entry)
+
+    return files, directories
+
+def transferDir(uploadingPath):
+    fileList, dirList = getContents(uploadingPath)
+
+    handler = tryConnect()
+    attempt = 1
+    nextcloudAvailable = False
+    while not handler.client:
+        if attempt == 5:
+            break
+        handler = tryConnect()
+        if handler.client:
+            nextcloudAvailable = True
+            break
+        attempt += 1
+
+    for filePath in fileList:
+        if Path(filePath.path).suffix not in IMPORTANT_EXTENSIONS:
+            continue
+
+        if nextcloudAvailable:
+            handler.action("WRITE", "LaptopBackups/", filePath.path)
+        else:
+            ChunkifierSingle(filePath.path, chunkSize, "", filePath.name, 1, general.pathInfo("db")+"jobQueue.db").sendPackets()
+
+    for dirPath in dirList:
+        obj = ChunkifierDirectory(dirPath.path, excludedFolders, chunkSize)
+        obj.startTransfer(nextcloudAvailable, handler)
