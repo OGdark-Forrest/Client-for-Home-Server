@@ -208,5 +208,82 @@ class dbHandler:
         finally:
             connection.close()
 
+class nextCloudHandler:
+    def __init__(self):
+        self.logger = setLogger("nextCloudHandler")
+        self.logger.setLevel(logging.INFO)
+
+        if os.getenv("nextcloudAppPassword") is None:
+            self.logger.critical("Environment Variable for App Password is None")
+            quit()
+
+        creds = {
+            "webdav_hostname": "http://100.64.105.62:8080/remote.php/dav/files/darkForrst/",
+            "webdav_login": "darkForrst",
+            "webdav_password": os.getenv("nextcloudAppPassword")
+        }
+        try:
+            self.client = Client(creds)
+        except Exception as e:
+            self.logger.critical("Failed to connect to server")
+            self.logger.exception(str(e))
+
+        self.actionMap = {
+            "WRITE": self.uploadFile,
+            "MOD": self.updateFile,
+            "READ": self.downloadFile,
+            "DEL": self.deleteFile
+        }
+
+    def uploadFile(self, serverPath, localPath):
+        try:
+            self.client.upload_sync(remote_path=serverPath, local_path=localPath)
+            self.logger.info(f"File {localPath} sent from client")
+        except Exception as e:
+            self.logger.exception(str(e))
+
+        if not self.client.check(serverPath):
+            self.logger.warning(f"Server failed to receive file {localPath}")
+        else:
+            self.logger.info(f"Server has received file {localPath}")
+
+    def updateFile(self, serverPath, localPath):
+        self.uploadFile(serverPath, localPath)
+
+    def downloadFile(self, serverPath, localPath):
+        try:
+            self.client.download_sync(remote_path=serverPath, local_path=localPath)
+            self.logger.info(f"File {localPath} has been downloaded from server")
+        except Exception as e:
+            self.logger.exception(str(e))
+
+        if not os.path.exists(localPath):
+            self.logger.warning(f"Client failed to add file {localPath}")
+        else:
+            self.logger.info(f"Client has added file {localPath}")
+
+    def deleteFile(self, serverPath, localPath=None):
+        try:
+            self.client.clean(remote_path=serverPath)
+            self.logger.info(f"File {serverPath} has been deleted from client-side")
+        except Exception as e:
+            self.logger.exception(str(e))
+
+        if self.client.check(remote_path=serverPath):
+            self.logger.warning(f"Server has failed to delete file {serverPath}")
+        else:
+            self.logger.info(f"Server has deleted file {serverPath}")
+
+    def action(self, operation, serverPath, localPath=None):
+        self.actionMap[operation](serverPath, localPath)
+
 def setLogger(name):
     return logging.getLogger(name)
+
+def configureLogger(fileName):
+    logging.basicConfig(
+        filename=f"utils/logs/{fileName}",
+        level=logging.DEBUG,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S"
+    )
