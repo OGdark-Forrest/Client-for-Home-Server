@@ -241,11 +241,14 @@ class nextCloudHandler:
             self.logger.info(f"File {localPath} sent from client")
         except Exception as e:
             self.logger.exception(str(e))
+            return False
 
         if not self.client.check(serverPath):
             self.logger.warning(f"Server failed to receive file {localPath}")
+            return False
         else:
             self.logger.info(f"Server has received file {localPath}")
+            return True
 
     def updateFile(self, serverPath, localPath):
         self.uploadFile(serverPath, localPath)
@@ -256,26 +259,41 @@ class nextCloudHandler:
             self.logger.info(f"File {localPath} has been downloaded from server")
         except Exception as e:
             self.logger.exception(str(e))
+            return False
 
         if not os.path.exists(localPath):
             self.logger.warning(f"Client failed to add file {localPath}")
+            return False
         else:
             self.logger.info(f"Client has added file {localPath}")
+            return True
 
-    def deleteFile(self, serverPath, localPath=None):
+    def deleteFile(self, serverPath, localPath="None"):
         try:
             self.client.clean(remote_path=serverPath)
             self.logger.info(f"File {serverPath} has been deleted from client-side")
         except Exception as e:
             self.logger.exception(str(e))
+            return False
 
         if self.client.check(remote_path=serverPath):
             self.logger.warning(f"Server has failed to delete file {serverPath}")
+            return False
         else:
             self.logger.info(f"Server has deleted file {serverPath}")
+            return True
 
-    def action(self, operation, serverPath, localPath=None):
-        self.actionMap[operation](serverPath, localPath)
+    def action(self, operation, serverPath, localPath="None"):
+        actionResult = self.actionMap[operation](serverPath, localPath)
+        if actionResult is False:
+            fileJob = {
+                "localPath": localPath,
+                "serverPath": serverPath,
+                "operation": operation
+            }
+            writeJSON(pathInfo("jsonUtils")+"pendingNCFiles.json", fileJob)
+            self.logger.info("fileJob has been appended to pending files")
+
 
 def setLogger(name):
     return logging.getLogger(name)
