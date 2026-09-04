@@ -103,6 +103,10 @@ class ChunkifierDirectory:
         self.buildFilePaths()
 
     def buildFilePaths(self):
+        if not self.directoryPath.is_dir():
+            self.filePaths.append(self.directoryPath)
+            return
+
         for path in self.directoryPath.rglob("*"):
             if path.is_file() and not any(part in self.excluded for part in path.parts):
                 self.filePaths.append(path)
