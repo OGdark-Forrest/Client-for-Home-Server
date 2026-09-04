@@ -7,3 +7,4 @@ logs/
 # Custom Files
 websocket.py
 chumma.py
+pendingNCFiles.json
