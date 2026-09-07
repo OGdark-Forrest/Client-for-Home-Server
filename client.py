@@ -10,13 +10,6 @@ def getAuthHeaders():
 
     return deviceID, deviceKey
 
-
-def configureLogger():
-    logging.basicConfig(
-        filename="utils/logFiles/clientLog.log",
-        level=logging.DEBUG
-    )
-
 class Connection:
     def __init__(self, uri):
         self.logger = general.setLogger("client.py: Connection")
@@ -29,20 +22,24 @@ class Connection:
             self.logger.critical("Environment variables pointing to None, restart process")
             return
         self.logger.debug("Environment variables set")
-        try:
-            self.websocket = await websockets.connect(
-                uri=self.uri,
-                additional_headers={
-                    "deviceID": headers[0], 
-                    "deviceKey": headers[1]
-                    }
-            )
-            self.isConnected = True
-            self.setComponents()
-        except Exception as e:
-            self.isConnected = False
-            self.logger.critical("Connection Failed")
-            self.logger.exception(e)
+        while True:
+            try:
+                self.websocket = await websockets.connect(
+                    uri=self.uri,
+                    additional_headers={
+                        "deviceID": headers[0], 
+                        "deviceKey": headers[1]
+                        }
+                )
+                self.isConnected = True
+                self.setComponents()
+                break
+            except Exception as e:
+                self.isConnected = False
+                self.logger.critical("Connection Failed")
+                self.logger.exception(e)
+                self.logger.info("RETRYING CONNECTION")
+                await asyncio.sleep(10)
 
     def setComponents(self):
         self.jobHandler = general.tableHandler(general.pathInfo("db")+"jobQueue.db", "jobs")
@@ -83,9 +80,8 @@ class Connection:
                 await asyncio.sleep(1)
                 continue
             self.logger.info("Job received")
-            self.logger.debug(task)
             await self.sender.send(task)
-            self.jobHandler.deleteRecord(task["id"])
+            self.jobHandler.deleteRecord(task["requestID"])
 
     async def processResults(self):
         while True:
@@ -96,7 +92,7 @@ class Connection:
                 continue
 
             self.dumbRouter.route(result)
-            self.resultHandler.deleteRecord(result["id"])
+            self.resultHandler.deleteRecord(result["requestID"])
 
 class Selector:
     def __init__(self, tableHandler: general.tableHandler):
@@ -104,7 +100,11 @@ class Selector:
         self.logger = general.setLogger("client.py: Selector")
 
     def getTask(self):
-        return self.tableHandler.getRecord()
+        for i in range(1, 5):
+            job = self.tableHandler.getRecordByVal(["priority"], [i])
+            if job is not None:
+                break
+        return job
 
 class Sender:
     def __init__(self, websocket):
@@ -162,7 +162,7 @@ async def run():
     await conn.startLoop()
 
 if __name__ == "__main__":
-    configureLogger()
+    general.configureLogger("clientLog.log", "DEBUG")
     logger = general.setLogger("client.py: main")
-    logger.info("Server is starting")
+    logger.info("Connecting to server")
     asyncio.run(run())
