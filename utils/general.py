@@ -74,7 +74,6 @@ class tableHandler:
                 recordParams.append(item)
 
             cursor.execute(query, tuple(recordParams))
-            self.logger.info(f"Executed Query: {query} with params: {tuple(recordParams)}")
             connection.commit()
         except Exception as e:
             self.logger.exception(str(e))
@@ -92,7 +91,6 @@ class tableHandler:
                     LIMIT 1
                 """
             cursor.execute(query)
-            self.logger.info(f"Executed Query: {query}")
 
             record = cursor.fetchone()
 
@@ -138,7 +136,6 @@ class tableHandler:
                 """
 
             cursor.execute(query)
-            self.logger.info(f"Executed Query: {query}")
 
             record = cursor.fetchone()
 
@@ -165,16 +162,15 @@ class tableHandler:
         finally:
             connection.close()
 
-    def deleteRecord(self, recordID):
+    def deleteRecord(self, requestID):
         connection = sqlite3.connect(self.fileName)
         cursor = connection.cursor()
         try:
-            query = f"DELETE FROM {self.tableName} WHERE id = ?"
+            query = f"DELETE FROM {self.tableName} WHERE requestID = ?"
             cursor.execute(
                 query,
-                (recordID,)
+                (requestID,)
             )
-            self.logger.info(f"Deleted Record with ID: {recordID}")
             connection.commit()
         except Exception as e:
             self.logger.exception(str(e))
@@ -186,7 +182,7 @@ class tableHandler:
         cursor = connection.cursor()
         try:
             cursor.execute(f"DELETE FROM {self.tableName}")
-            self.logger.info(f"Deleted table {self.tableName}")
+            self.logger.debug(f"Deleted table {self.tableName}")
         except Exception as e:
             self.logger.exception(str(e))
         finally:
