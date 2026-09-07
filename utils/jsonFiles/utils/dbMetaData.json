@@ -1,0 +1,70 @@
+{
+    "jobs": {
+        "requestID": {
+            "params": ["TEXT"],
+            "mods": "None"
+        },
+        "timestamp": {
+            "params": ["TEXT"],
+            "mods": "None"
+        },
+        "priority": {
+            "params": ["INTEGER"],
+            "mods": "integer"
+        },
+        "jobDescription": {
+            "params": ["TEXT"],
+            "mods": "None"
+        },
+        "endpoint": {
+            "params": ["TEXT"],
+            "mods": "None"
+        },
+        "params": {
+            "params": ["TEXT"],
+            "mods": "dict"
+        },
+        "data": {
+            "params": ["TEXT"],
+            "mods": "dict"
+        }
+    },
+    "results": {
+        "requestID": {
+            "params": ["TEXT"],
+            "mods": "None"
+        },
+        "timestamp": {
+            "params": ["TEXT"],
+            "mods": "None"
+        },
+        "priority": {
+            "params": ["INTEGER"],
+            "mods": "integer"
+        },
+        "jobDescription": {
+            "params": ["TEXT"],
+            "mods": "None"
+        },
+        "endpoint": {
+            "params": ["TEXT"],
+            "mods": "None"
+        },
+        "params": {
+            "params": ["TEXT"],
+            "mods": "dict"
+        },
+        "data": {
+            "params": ["TEXT"],
+            "mods": "dict"
+        },
+        "resultStatus": {
+            "params": ["TEXT"],
+            "mods": "None"
+        },
+        "result": {
+            "params": ["TEXT"],
+            "mods": "dict"
+        }
+    }
+}

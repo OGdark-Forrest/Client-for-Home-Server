@@ -19,7 +19,7 @@ def configureLogger():
 
 class Connection:
     def __init__(self, uri):
-        self.logger = general.setLogger("client.py-Connection")
+        self.logger = general.setLogger("client.py: Connection")
         self.uri = uri
         self.isConnected = False
 
@@ -28,7 +28,7 @@ class Connection:
         if not headers:
             self.logger.critical("Environment variables pointing to None, restart process")
             return
-        self.logger.debug("Environment variables not None")
+        self.logger.debug("Environment variables set")
         try:
             self.websocket = await websockets.connect(
                 uri=self.uri,
@@ -45,8 +45,8 @@ class Connection:
             self.logger.exception(e)
 
     def setComponents(self):
-        self.jobHandler = general.dbHandler(general.pathInfo("db")+"jobQueue.db", "JOB")
-        self.resultHandler = general.dbHandler(general.pathInfo("db")+"resultQueue.db", "RESULT")
+        self.jobHandler = general.tableHandler(general.pathInfo("db")+"jobQueue.db", "jobs")
+        self.resultHandler = general.tableHandler(general.pathInfo("db")+"resultQueue.db", "results")
 
         self.sender = Sender(self.websocket)
         self.jobSelector = Selector(self.jobHandler)
@@ -99,17 +99,17 @@ class Connection:
             self.resultHandler.deleteRecord(result["id"])
 
 class Selector:
-    def __init__(self, dbHandler: general.dbHandler):
-        self.dbHandler = dbHandler
-        self.logger = general.setLogger("client.py-Selector")
+    def __init__(self, tableHandler: general.tableHandler):
+        self.tableHandler = tableHandler
+        self.logger = general.setLogger("client.py: Selector")
 
     def getTask(self):
-        return self.dbHandler.getRecord()
+        return self.tableHandler.getRecord()
 
 class Sender:
     def __init__(self, websocket):
         self.websocket = websocket
-        self.logger = general.setLogger("client.py-Sender")
+        self.logger = general.setLogger("client.py: Sender")
 
     async def send(self, data):
         if type(data) is dict:
@@ -122,7 +122,7 @@ class Sender:
 class Listener:
     def __init__(self, websocket):
         self.websocket = websocket
-        self.logger = general.setLogger("client.py-Listener")
+        self.logger = general.setLogger("client.py: Listener")
 
     async def listen(self):
         message = await self.websocket.recv()
@@ -130,7 +130,7 @@ class Listener:
 
 class DumbRouter:
     def __init__(self, router, handler):
-        self.logger = general.setLogger("client.py-DumbRouter")
+        self.logger = general.setLogger("client.py: DumbRouter")
         self.smartRouter = router
         self.errorHandler = handler
 
@@ -142,7 +142,7 @@ class DumbRouter:
 
 class ErrorHandler:
     def __init__(self):
-        self.logger = general.setLogger("client.py-ErrorHandler")
+        self.logger = general.setLogger("client.py: ErrorHandler")
     def handle(self, task):
         print(task["resultStatus"])
         print(task["result"])
@@ -150,7 +150,7 @@ class ErrorHandler:
 class SmartRouter:
     def __init__(self):
         self.routingTable = {}
-        self.logger = general.setLogger("client.py-SmartRouter")
+        self.logger = general.setLogger("client.py: SmartRouter")
 
     def route(self, task):
         print(task["resultStatus"])
@@ -163,6 +163,6 @@ async def run():
 
 if __name__ == "__main__":
     configureLogger()
-    logger = general.setLogger("client.py-main")
+    logger = general.setLogger("client.py: main")
     logger.info("Server is starting")
     asyncio.run(run())
