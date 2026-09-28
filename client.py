@@ -162,7 +162,7 @@ async def run():
     await conn.startLoop()
 
 if __name__ == "__main__":
-    general.configureLogger("clientLog.log", "DEBUG")
+    general.configureLogger("clientLog.log", "INFO")
     logger = general.setLogger("client.py: main")
     logger.info("Connecting to server")
     asyncio.run(run())

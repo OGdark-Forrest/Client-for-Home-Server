@@ -1,5 +1,7 @@
 from utils.imports import *
 
+WEB_DAV_PASSWORD = os.getenv("nextcloudAppPassword")
+
 def readJSON(filename):
     with open(filename) as rfile:
         data = json.load(rfile)
@@ -198,9 +200,9 @@ class nextCloudHandler:
             quit()
 
         creds = {
-            "webdav_hostname": "http://100.64.105.62:8080/remote.php/dav/files/darkForrst/",
-            "webdav_login": "darkForrst",
-            "webdav_password": os.getenv("nextcloudAppPassword")
+            "webdav_hostname": "http://cloud.aetherlink.uk/remote.php/dav/files/darkForrest/",
+            "webdav_login": "darkForrest",
+            "webdav_password": WEB_DAV_PASSWORD
         }
         try:
             self.client = Client(creds)
